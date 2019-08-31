@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
-const Users = require("./auth-model")
+const Users = require("./auth-model");
+const jwt = require("jsonwebtoken");
+const secret = require("./secret");
 
 router.post('/register', (req, res) => {
   const user = req.body;
@@ -8,7 +10,11 @@ router.post('/register', (req, res) => {
   user.password = hash;
 
   if (!user.username || !user.password) {
-    res.status(400).json({ message: "Please provide username and password." });
+    const token = getJwt(user);
+        res.status(200).json({
+          message: `Welcome, ${user.username}. Here is your token below.`,
+          token
+        });
   } else {
     Users.add(user)
       .then(user => {
@@ -40,5 +46,19 @@ router.post('/login', (req, res) => {
       res.status(500).json({ message: "There was an error logging in." });
     });
 });
+
+function getJwt(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+    jwtid: 1
+  };
+
+  const options = {
+    expiresIn: "8h"
+  };
+
+  return jwt.sign(payload, secret.jwtSecret, options);
+}
 
 module.exports = router;

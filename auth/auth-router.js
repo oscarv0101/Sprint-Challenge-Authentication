@@ -10,11 +10,7 @@ router.post('/register', (req, res) => {
   user.password = hash;
 
   if (!user.username || !user.password) {
-    const token = getJwt(user);
-        res.status(200).json({
-          message: `Welcome, ${user.username}. Here is your token below.`,
-          token
-        });
+    res.status(422).json({ message: "Please provide username and password." });
   } else {
     Users.add(user)
       .then(user => {
@@ -35,7 +31,11 @@ router.post('/login', (req, res) => {
     .first()
     .then(user => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        res.status(200).json({ message: `Welcome, ${user.username}` });
+        const token = getJwt(user);
+        res.status(200).json({
+          message: `Welcome, ${user.username}. Here is your token below.`,
+          token
+        });
       } else {
         res
           .status(401)
